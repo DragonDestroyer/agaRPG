@@ -1,136 +1,136 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python Graphics in Browser | Matplotlib + PyScript on GitHub Pages</title>
-    
-    <!-- PyScript CSS -->
-    <link rel="stylesheet" href="https://pyscript.net/releases/2025.10.2/core.css">
-    
-    <!-- Bootstrap for nice UI (optional) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <title>AGARPG</title>
     <style>
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #eee;
-            min-height: 100vh;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container {
-            max-width: 900px;
-            margin-top: 2rem;
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a0a;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: #fff;
         }
-        #plot-target {
-            background: white;
-            border-radius: 12px;
-            padding: 1rem;
-            min-height: 400px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-        }
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-        }
-        pre {
-            background: #0d1117;
-            color: #c9d1d9;
-            border-radius: 8px;
-            padding: 1rem;
-            font-size: 0.85rem;
-            overflow-x: auto;
-        }
-        .btn-primary {
-            background: #00d4ff;
-            border: none;
-            color: #000;
-            font-weight: 600;
-        }
-        .btn-primary:hover {
-            background: #00b8e0;
-            color: #000;
+        #launcher {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
         }
         h1 {
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(255,255,255,0.3);
         }
-        .loading {
-            text-align: center;
-            padding: 3rem;
-            color: #00d4ff;
+        #run-btn {
+            font-size: 1.4rem;
+            padding: 1rem 3rem;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        #run-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255,255,255,0.4);
+        }
+        #run-btn:active {
+            transform: scale(0.98);
+        }
+        #game-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #111;
+        }
+        #loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: #aaa;
         }
     </style>
 </head>
 <body>
-    <div class="container py-4">
-        <div class="text-center mb-4">
-            <h1 class="display-5 fw-bold">Python Graphics in the Browser</h1>
-            <p class="lead text-secondary">Matplotlib + NumPy running client-side via PyScript / Pyodide<br>
-            Hosted freely on <strong>GitHub Pages</strong> — no server needed!</p>
-        </div>
-
-        <div class="row g-4">
-            <div class="col-lg-5">
-                <div class="card p-3 h-100">
-                    <h5 class="card-title text-info">Live Plot Controls</h5>
-                    <div class="mb-3">
-                        <label class="form-label">Function</label>
-                        <select id="func-select" class="form-select bg-dark text-light border-secondary">
-                            <option value="sin">Sine Wave</option>
-                            <option value="cos">Cosine Wave</option>
-                            <option value="sinc">Sinc Function</option>
-                            <option value="exp">Damped Sine</option>
-                            <option value="random">Random Walk</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Points: <span id="points-val">200</span></label>
-                        <input type="range" class="form-range" id="points-slider" min="50" max="1000" value="200">
-                    </div>
-                    <button id="plot-btn" class="btn btn-primary w-100 mb-3" py-click="update_plot">
-                        🎨 Generate Plot
-                    </button>
-                    <div class="small text-secondary">
-                        Powered by <a href="https://pyscript.net" class="text-info" target="_blank">PyScript</a> 
-                        + <a href="https://matplotlib.org" class="text-info" target="_blank">Matplotlib</a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-7">
-                <div id="plot-target" class="d-flex align-items-center justify-content-center">
-                    <div class="loading" id="loading-msg">
-                        <div class="spinner-border text-info mb-3" role="status"></div>
-                        <p>Loading Python runtime (Pyodide)...<br>
-                        <small>First load may take 5–15 seconds</small></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card mt-4 p-3">
-            <h5 class="text-info">How this works</h5>
-            <p class="mb-2">This entire page is <strong>static files</strong>. GitHub Pages serves the HTML/CSS/JS.
-            When opened, PyScript downloads a full CPython interpreter compiled to WebAssembly (Pyodide)
-            and runs real Python + Matplotlib entirely in your browser.</p>
-            <pre><code>&lt;script type="module" src="https://pyscript.net/releases/2025.10.2/core.js"&gt;&lt;/script&gt;
-&lt;script type="py" config='{"packages":["matplotlib","numpy"]}' src="main.py"&gt;&lt;/script&gt;</code></pre>
-        </div>
-
-        <div class="text-center mt-4 text-secondary small">
-            <p>Fork this example → put in a GitHub repo → enable Pages on main branch (or /docs folder).<br>
-            Your Python graphics will be live at <code>username.github.io/repo</code></p>
-        </div>
+    <div id="launcher">
+        <h1>AGARPG</h1>
+        <button id="run-btn">Run Game</button>
     </div>
 
-    <!-- PyScript core -->
-    <script type="module" src="https://pyscript.net/releases/2025.10.2/core.js"></script>
-    
-    <!-- Your Python code -->
-    <script type="py" config='{"packages":["matplotlib","numpy"]}' src="./main.py"></script>
+    <div id="game-container">
+        <div id="loading">Loading Python...</div>
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <script type="module">
+        import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.mjs";
+
+        const launcher = document.getElementById("launcher");
+        const gameContainer = document.getElementById("game-container");
+        const canvas = document.getElementById("game-canvas");
+        const loading = document.getElementById("loading");
+        const runBtn = document.getElementById("run-btn");
+
+        runBtn.addEventListener("click", async () => {
+            // Hide launcher, show game area (full page, not browser fullscreen)
+            launcher.style.display = "none";
+            gameContainer.style.display = "block";
+            loading.style.display = "block";
+
+            // Make canvas fill the entire page
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Load Pyodide
+            const pyodide = await loadPyodide({
+                indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.0/full/"
+            });
+
+            // Expose canvas to Python
+            pyodide.globals.set("canvas", canvas);
+            pyodide.globals.set("ctx", canvas.getContext("2d"));
+
+            // Fetch and run main.py
+            const response = await fetch("./game_files/main.py");
+            const code = await response.text();
+            await pyodide.runPythonAsync(code);
+
+            loading.style.display = "none";
+        });
+
+        // Handle resize
+        window.addEventListener("resize", () => {
+            if (gameContainer.style.display === "block") {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
 </body>
-</html>
